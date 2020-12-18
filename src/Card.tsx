@@ -5,6 +5,7 @@ import {CardContainer} from './styles'
 
 interface CardProps {
     text: string;
+    index: number;
 
 }
 
