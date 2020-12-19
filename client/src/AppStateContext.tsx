@@ -1,8 +1,13 @@
 import React, { createContext, useReducer, useContext } from 'react';
 import { v4 as uuid } from 'uuid';
 import { DragItem } from './DragItem';
-import { moveItem } from './moveItem';
-import { findItemIndexById } from './utils/findItemIndexById';
+import {
+	findItemIndexById,
+	insertItemAtIndex,
+	moveItem,
+	overrideItemAtIndex,
+	removeItemAtIndex,
+} from './utils/arrayUtils';
 interface Task {
 	id: string;
 	text: string;
@@ -103,6 +108,43 @@ const appStateReducer = (state: AppState, action: Action): AppState => {
 		}
 		case 'SET_DRAGGED_ITEM': {
 			return { ...state, draggedItem: action.payload };
+		}
+		case 'MOVE_TASK': {
+			const {
+				dragIndex,
+				hoverIndex,
+				sourceColumn,
+				targetColumn,
+			} = action.payload;
+			const sourceListIndex = findItemIndexById(state.lists, sourceColumn);
+			const sourceList = state.lists[sourceListIndex];
+			const task = sourceList.tasks[dragIndex];
+			const updatedSourceList = {
+				...sourceList,
+				tasks: removeItemAtIndex(sourceList.tasks, dragIndex),
+			};
+			const stateWithUpdatedSourceList = {
+				...state,
+				lists: overrideItemAtIndex(
+					state.lists,
+					updatedSourceList,
+					sourceListIndex
+				),
+			};
+			const targetListIndex = findItemIndexById(state.lists, targetColumn);
+			const targetList = stateWithUpdatedSourceList.lists[targetListIndex];
+			const updatedTargetList = {
+				...targetList,
+				tasks: insertItemAtIndex(targetList.tasks, task, hoverIndex),
+			};
+			return {
+				...stateWithUpdatedSourceList,
+				lists: overrideItemAtIndex(
+					stateWithUpdatedSourceList.lists,
+					updatedTargetList,
+					targetListIndex
+				),
+			};
 		}
 		default: {
 			return state;

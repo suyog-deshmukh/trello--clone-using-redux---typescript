@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAppState } from './AppStateContext';
 import { Column } from './Column';
-import { Card } from './Card';
 import { AppContainer } from './styles';
 import { AddNewItem } from './AddNewItem';
 import { CustomDragLayer } from './CustomDragLayer';
