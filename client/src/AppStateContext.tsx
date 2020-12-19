@@ -1,5 +1,6 @@
-import React, { createContext, useReducer, useContext } from 'react';
+import React, { createContext, useReducer, useContext, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
+import { save } from './api';
 import { DragItem } from './DragItem';
 import {
 	findItemIndexById,
@@ -8,6 +9,7 @@ import {
 	overrideItemAtIndex,
 	removeItemAtIndex,
 } from './utils/arrayUtils';
+import { withData } from './withData';
 interface Task {
 	id: string;
 	text: string;
@@ -152,14 +154,17 @@ const appStateReducer = (state: AppState, action: Action): AppState => {
 	}
 };
 
-export const AppStateProvider = ({ children }: React.PropsWithChildren<{}>) => {
+export const AppStateProvider = withData(({ children }: React.PropsWithChildren<{}>) => {
 	const [state, dispatch] = useReducer(appStateReducer, appData);
+	useEffect(() => {
+		save(state)
+		}, [state])
 	return (
 		<AppStateContext.Provider value={{ state, dispatch }}>
 			{children}
 		</AppStateContext.Provider>
 	);
-};
+});
 
 export const useAppState = () => {
 	return useContext(AppStateContext);
