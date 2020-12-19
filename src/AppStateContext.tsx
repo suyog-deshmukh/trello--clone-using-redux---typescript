@@ -1,5 +1,7 @@
 import React, { createContext, useReducer, useContext } from 'react';
 import { v4 as uuid } from 'uuid';
+import { DragItem } from './DragItem';
+import { moveItem } from './moveItem';
 import { findItemIndexById } from './utils/findItemIndexById';
 interface Task {
 	id: string;
@@ -12,6 +14,7 @@ interface List {
 }
 export interface AppState {
 	lists: List[];
+	draggedItem?: any;
 }
 const appData: AppState = {
 	lists: [
@@ -33,8 +36,8 @@ const appData: AppState = {
 	],
 };
 interface AppStateContextProps {
-    state: AppState;
-    dispatch: React.Dispatch<Action>
+	state: AppState;
+	dispatch: React.Dispatch<Action>;
 }
 
 type Action =
@@ -46,12 +49,25 @@ type Action =
 			type: 'ADD_TASK';
 			payload: { text: string; taskId: string };
 	  }
-	  | {
-		  type: "MOVE_LIST";
-		  payload: {
-			  dragIndex: number;
-			  hoverIndex: number
-		  }
+	| {
+			type: 'MOVE_LIST';
+			payload: {
+				dragIndex: number;
+				hoverIndex: number;
+			};
+	  }
+	| {
+			type: 'SET_DRAGGED_ITEM';
+			payload: DragItem | undefined;
+	  }
+	| {
+			type: 'MOVE_TASK';
+			payload: {
+				dragIndex: number;
+				hoverIndex: number;
+				sourceColumn: string;
+				targetColumn: string;
+			};
 	  };
 
 const AppStateContext = createContext<AppStateContextProps>(
@@ -61,45 +77,47 @@ const AppStateContext = createContext<AppStateContextProps>(
 const appStateReducer = (state: AppState, action: Action): AppState => {
 	switch (action.type) {
 		case 'ADD_LIST': {
-            return {...state,
-                lists: [
-                    ...state.lists,
-                    {id: uuid(), text: action.payload, tasks: []}
-                ]
-            
-            };
+			return {
+				...state,
+				lists: [
+					...state.lists,
+					{ id: uuid(), text: action.payload, tasks: [] },
+				],
+			};
 		}
 		case 'ADD_TASK': {
-            const targetLaneIndex = findItemIndexById(
-                state.lists,
-                action.payload.taskId
-            )
-            state.lists[targetLaneIndex].tasks.push({
-                id: uuid(),
-                text: action.payload.text
-            })
-			return {...state};
+			const targetLaneIndex = findItemIndexById(
+				state.lists,
+				action.payload.taskId
+			);
+			state.lists[targetLaneIndex].tasks.push({
+				id: uuid(),
+				text: action.payload.text,
+			});
+			return { ...state };
 		}
 		case 'MOVE_LIST': {
-			const {dragIndex, hoverIndex} = action.payload;
-			state.lists = moveItem(state.lists, dragIndex, hoverIndex)
-			return {...state}
-
+			const { dragIndex, hoverIndex } = action.payload;
+			state.lists = moveItem(state.lists, dragIndex, hoverIndex);
+			return { ...state };
 		}
-        default: {
-            return state;  
-        }
+		case 'SET_DRAGGED_ITEM': {
+			return { ...state, draggedItem: action.payload };
+		}
+		default: {
+			return state;
+		}
 	}
 };
 
 export const AppStateProvider = ({ children }: React.PropsWithChildren<{}>) => {
-    const [state, dispatch] = useReducer(appStateReducer, appData)
-    return (
-    <AppStateContext.Provider value={{ state, dispatch }}>
-    {children}
-    </AppStateContext.Provider>
-    )
-    }
+	const [state, dispatch] = useReducer(appStateReducer, appData);
+	return (
+		<AppStateContext.Provider value={{ state, dispatch }}>
+			{children}
+		</AppStateContext.Provider>
+	);
+};
 
 export const useAppState = () => {
 	return useContext(AppStateContext);

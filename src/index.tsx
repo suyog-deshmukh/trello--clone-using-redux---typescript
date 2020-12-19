@@ -9,7 +9,7 @@ import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
 	<React.StrictMode>
-		<DndProvider backend={HTML5Backend}>
+		<DndProvider  backend={HTML5Backend}>
 			<AppStateProvider>
 				<App />
 			</AppStateProvider>
